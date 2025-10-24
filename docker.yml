@@ -1,0 +1,45 @@
+---
+- name: Install Docker on all nodes
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Docker
+      package:
+        name: docker
+        state: present
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+- name: Deploy Web Server on Ubuntu
+  hosts: ubuntu
+  become: yes
+  tasks:
+    - name: Copy Dockerfile
+      copy:
+        src: web/Dockerfile
+        dest: /home/{{ ansible_user }}/Dockerfile
+
+    - name: Build Web Image
+      command: docker build -t webserver /home/{{ ansible_user }}
+
+    - name: Run Web Container
+      command: docker run -d -p 80:80 --name web webserver
+
+- name: Deploy DB Server on CentOS
+  hosts: centos
+  become: yes
+  tasks:
+    - name: Copy Dockerfile
+      copy:
+        src: db/Dockerfile
+        dest: /home/{{ ansible_user }}/Dockerfile
+
+    - name: Build DB Image
+      command: docker build -t dbserver /home/{{ ansible_user }}
+
+    - name: Run DB Container
+      command: docker run -d -p 3306:3306 --name db dbserver
